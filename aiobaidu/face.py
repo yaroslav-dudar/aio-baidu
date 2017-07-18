@@ -120,11 +120,10 @@ class AipFace:
             )
 
             result = await resp.json()
-            await resp.release()
         except Exception as exc:
             return {'error': exc}
         finally:
-            await session.close()
+            await resp.release()
 
         return result
 
@@ -152,13 +151,11 @@ class AipFace:
                 loop=self._loop
             )
             self._authResponse = await resp.json()
-            await resp.release()
-
             self._authResponse['time'] = int(time.time())
         except Exception as exc:
             print(exc)
         finally:
-            await session.close()
+            await resp.release()
 
         return self._authResponse
 
