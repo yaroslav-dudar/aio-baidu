@@ -11,7 +11,10 @@ BAIDU = {
     'SECRET_KEY': '???'
 }
 
-test_img = "base64-img"
+# Important: images should be in base64 format
+test_img1 = ""
+test_img2 = ""
+test_img3 = ""
 
 async def main(loop):
     face = aiobaidu.AipFace(
@@ -19,8 +22,14 @@ async def main(loop):
         loop=loop
     )
 
-    resp = await face.identifyUser("group3", test_img)
+    resp = await face.identifyUser("group3", test_img1)
+    print("face.identifyUser Response =>")
     print(resp)
+
+    resp = await face.match([test_img2, test_img1, test_img3])
+    print("face.match Response =>")
+    print(resp)
+    await face.close_session()
 
 loop.run_until_complete(main(loop))
 loop.close()

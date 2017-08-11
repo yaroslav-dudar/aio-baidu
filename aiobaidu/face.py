@@ -21,6 +21,7 @@ class AipFace:
     _scope = 'brain_all_scope'
 
     _identifyUserUrl = 'https://aip.baidubce.com/rest/2.0/face/v2/identify'
+    _matchUrl = 'https://aip.baidubce.com/rest/2.0/face/v2/match'
 
     def __init__(self, appId, apiKey, secretKey, loop=None):
         self._appId = appId
@@ -112,7 +113,7 @@ class AipFace:
         try:
             resp = await asyncio.wait_for(
                 session.post(
-                    self._identifyUserUrl, compress=False,
+                    url, compress=False,
                     data=data, params=params, headers=authHeaders
                 ),
                 self._timeout,
@@ -166,3 +167,16 @@ class AipFace:
             data.update(options)
 
         return await self._request(self._identifyUserUrl, data)
+
+    async def match(self, images, options=None):
+        data = {'images': ','.join(images)}
+        if options:
+            data.update(options)
+
+        return await self._request(self._matchUrl, data)
+
+    async def close_session(self):
+        """
+            get rid of unclosed client session warning
+        """
+        await self._client_session.close()
