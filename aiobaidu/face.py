@@ -122,9 +122,11 @@ class AipFace:
 
             result = await resp.json()
         except Exception as exc:
+            resp = None
             return {'error': exc}
         finally:
-            await resp.release()
+            if resp:
+                await resp.release()
 
         return result
 
