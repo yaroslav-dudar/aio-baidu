@@ -14,14 +14,36 @@ from urllib.parse import urlparse
 
 from .bceutil import get_canonical_querystring
 
-class AipFace:
+
+class AipFaceCallBaidu:
     """ Baidu Face Recognition Api wrapper"""
-    
+
     _accessTokenUrl = 'https://aip.baidubce.com/oauth/2.0/token'
     _scope = 'brain_all_scope'
 
     _identifyUserUrl = 'https://aip.baidubce.com/rest/2.0/face/v2/identify'
     _matchUrl = 'https://aip.baidubce.com/rest/2.0/face/v2/match'
+
+    _detectUrl = 'https://aip.baidubce.com/rest/2.0/face/v1/detect'
+
+    _verifyUrl = 'https://aip.baidubce.com/rest/2.0/face/v2/verify'
+
+    _addUrl = 'https://aip.baidubce.com/rest/2.0/face/v2/faceset/user/add'
+
+    _updateUrl = 'https://aip.baidubce.com/rest/2.0/face/v2/faceset/user/update'
+
+    _deleteUrl = 'https://aip.baidubce.com/rest/2.0/face/v2/faceset/user/delete'
+
+    _getUrl = 'https://aip.baidubce.com/rest/2.0/face/v2/faceset/user/get'
+
+    _getlistUrl = 'https://aip.baidubce.com/rest/2.0/face/v2/faceset/group/getlist'
+
+    _getusersUrl = 'https://aip.baidubce.com/rest/2.0/face/v2/faceset/group/getusers'
+
+    _adduserUrl = 'https://aip.baidubce.com/rest/2.0/face/v2/faceset/group/adduser'
+
+    _deleteuserUrl = 'https://aip.baidubce.com/rest/2.0/face/v2/faceset/group/deleteuser'
+
 
     def __init__(self, appId, apiKey, secretKey, loop=None):
         self._appId = appId
@@ -64,8 +86,8 @@ class AipFace:
         # 1 Generate SigningKey
         val = "bce-auth-v%s/%s/%s/%s" % (version, self._apiKey, timestamp, expire)
         signingKey = hmac.new(self._secretKey.encode('utf-8'), val.encode('utf-8'),
-                        hashlib.sha256
-                    ).hexdigest()
+                              hashlib.sha256
+                              ).hexdigest()
 
         # 2 Generate CanonicalRequest
         # 2.1 Genrate CanonicalURI
@@ -83,11 +105,11 @@ class AipFace:
 
         # 3 Generate Final Signature
         signature = hmac.new(signingKey.encode('utf-8'), canonicalRequest.encode('utf-8'),
-                        hashlib.sha256
-                    ).hexdigest()
+                             hashlib.sha256
+                             ).hexdigest()
         authorization = 'bce-auth-v%s/%s/%s/%s/%s/%s' % (version, self._apiKey, timestamp,
-                            expire, signatureHeaders, signature
-                        )
+                                                         expire, signatureHeaders, signature
+                                                         )
 
         return {
             'Host': host,
@@ -133,23 +155,23 @@ class AipFace:
     async def _auth(self, refresh=False):
         if not refresh and self._authResponse:
             # check if token not expired
-            tm = self._authResponse.get('time', 0) +\
-                int(self._authResponse.get('expires_in', 0)) - 30
+            tm = self._authResponse.get('time', 0) + \
+                 int(self._authResponse.get('expires_in', 0)) - 30
 
             if tm > int(time.time()):
                 return self._authResponse
-            
+
         session = self.client_session()
 
         try:
             resp = await asyncio.wait_for(
                 session.get(self._accessTokenUrl,
-                    params={
-                        'grant_type': 'client_credentials',
-                        'client_id': self._apiKey,
-                        'client_secret': self._secretKey,
-                    }
-                ),
+                            params={
+                                'grant_type': 'client_credentials',
+                                'client_id': self._apiKey,
+                                'client_secret': self._secretKey,
+                            }
+                            ),
                 self._timeout,
                 loop=self._loop
             )
@@ -170,6 +192,8 @@ class AipFace:
 
         return await self._request(self._identifyUserUrl, data)
 
+
+
     async def match(self, images, options=None):
         data = {'images': ','.join(images)}
         if options:
@@ -182,3 +206,114 @@ class AipFace:
             get rid of unclosed client session warning
         """
         await self._client_session.close()
+
+
+    # Colm's Additions 02/10/2017
+    async def detect(self, image, options=None):
+        data = {'image': image}
+
+		#'max_face_num' : numOfFaces, # optional param
+                #'face_fields' : fieldstring}
+        if options:
+            data.update(options)
+
+        return await self._request(self._detectUrl, data)
+
+
+    async def verify(self, uId, image, groupId, options=None):
+        data = {'uid': uId,  'image': image, 'group_id' : groupId}
+
+                #'top_num' : topNum, 'ext_fields': extFields} # optional param
+        if options:
+            data.update(options)
+
+        return await self._request(self._verifyUrl, data)
+
+
+
+    async def get(self, uId, options=None):
+        data = {'uid': uId}
+        if options:
+            data.update(options)
+
+        return await self._request(self._getUrl, data)
+
+
+
+
+    async def getlist(self, options=None):
+        data = {}
+
+	# 'start': start, 'end': end  # optional param
+
+        if options:
+            data.update(options)
+
+        return await self._request(self._getlistUrl, data)
+
+
+    async def getusers(self, groupId, options=None):
+        data = {'group_id': groupId}
+
+	# 'start': start, 'end': end  # optional param
+
+        if options:
+            data.update(options)
+
+        return await self._request(self._getusersUrl, data)
+
+
+
+    async def add(self, uId, userInfo, groupId, image, options=None):
+        data = {'uid': uId, 'user_info': userInfo,
+                'group_id': groupId, 'image': image}
+
+        if options:
+            data.update(options)
+        return await self._request(self._addUrl, data)
+
+
+
+    async def update(self, uId, image, userInfo, groupId, options=None):
+        data = {'uid': uId, 'user_info': userInfo,
+                'group_id': groupId, 'image': image} #,
+                #'action_type': actionType}
+
+        if options:
+            data.update(options)
+
+        return await self._request(self._updateUrl, data)
+
+
+
+    async def delete(self, uId, groupId, options=None):
+        data = {'uid': uId, 'group_id': groupId} 
+
+        if options:
+            data.update(options)
+
+        return await self._request(self._deleteUrl, data)
+
+
+
+    async def adduser(self, groupId, uId, srcGroupId, options=None):
+        data = {'uid': uId, 'group_id': groupId,
+                'src_group_id': srcGroupId}
+
+        if options:
+            data.update(options)
+
+        return await self._request(self._adduserUrl, data)
+
+
+
+    async def deleteuser(self, groupId, uId, options=None):
+        data = {'uid': uId, 'group_id': groupId}
+
+        if options:
+            data.update(options)
+
+        return await self._request(self._deleteuserUrl, data)
+
+
+
