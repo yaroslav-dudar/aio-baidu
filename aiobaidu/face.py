@@ -15,7 +15,7 @@ from urllib.parse import urlparse
 from .bceutil import get_canonical_querystring
 
 
-class AipFaceCallBaidu:
+class AipFace:
     """ Baidu Face Recognition Api wrapper"""
 
     _accessTokenUrl = 'https://aip.baidubce.com/oauth/2.0/token'
