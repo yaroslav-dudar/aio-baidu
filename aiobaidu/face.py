@@ -11,6 +11,7 @@ import datetime
 from urllib.parse import urlencode
 from urllib.parse import quote
 from urllib.parse import urlparse
+from urllib.parse import urljoin
 
 from .bceutil import get_canonical_querystring
 
@@ -18,38 +19,39 @@ from .bceutil import get_canonical_querystring
 class AipFace:
     """ Baidu Face Recognition Api wrapper"""
 
-    _accessTokenUrl = 'https://aip.baidubce.com/oauth/2.0/token'
+    _accessTokenUrl = '/oauth/2.0/token'
     _scope = 'brain_all_scope'
 
-    _identifyUserUrl = 'https://aip.baidubce.com/rest/2.0/face/v2/identify'
-    _matchUrl = 'https://aip.baidubce.com/rest/2.0/face/v2/match'
+    _identifyUserUrl = '/rest/2.0/face/v2/identify'
+    _matchUrl = '/rest/2.0/face/v2/match'
 
-    _detectUrl = 'https://aip.baidubce.com/rest/2.0/face/v1/detect'
+    _detectUrl = '/rest/2.0/face/v1/detect'
 
-    _verifyUrl = 'https://aip.baidubce.com/rest/2.0/face/v2/verify'
+    _verifyUrl = '/rest/2.0/face/v2/verify'
 
-    _addUrl = 'https://aip.baidubce.com/rest/2.0/face/v2/faceset/user/add'
+    _addUrl = '/rest/2.0/face/v2/faceset/user/add'
 
-    _updateUrl = 'https://aip.baidubce.com/rest/2.0/face/v2/faceset/user/update'
+    _updateUrl = '/rest/2.0/face/v2/faceset/user/update'
 
-    _deleteUrl = 'https://aip.baidubce.com/rest/2.0/face/v2/faceset/user/delete'
+    _deleteUrl = '/rest/2.0/face/v2/faceset/user/delete'
 
-    _getUrl = 'https://aip.baidubce.com/rest/2.0/face/v2/faceset/user/get'
+    _getUrl = '/rest/2.0/face/v2/faceset/user/get'
 
-    _getlistUrl = 'https://aip.baidubce.com/rest/2.0/face/v2/faceset/group/getlist'
+    _getlistUrl = '/rest/2.0/face/v2/faceset/group/getlist'
 
-    _getusersUrl = 'https://aip.baidubce.com/rest/2.0/face/v2/faceset/group/getusers'
+    _getusersUrl = '/rest/2.0/face/v2/faceset/group/getusers'
 
-    _adduserUrl = 'https://aip.baidubce.com/rest/2.0/face/v2/faceset/group/adduser'
+    _adduserUrl = '/rest/2.0/face/v2/faceset/group/adduser'
 
-    _deleteuserUrl = 'https://aip.baidubce.com/rest/2.0/face/v2/faceset/group/deleteuser'
+    _deleteuserUrl = '/rest/2.0/face/v2/faceset/group/deleteuser'
 
 
-    def __init__(self, appId, apiKey, secretKey, loop=None):
+    def __init__(self, appId, apiKey, secretKey, loop=None, host='https://aip.baidubce.com'):
         self._appId = appId
         self._apiKey = apiKey
         self._secretKey = secretKey
         self._timeout = 60.0
+        self._host = host
 
         if loop is None:
             loop = asyncio.get_event_loop()
@@ -121,6 +123,7 @@ class AipFace:
     async def _request(self, url, data):
         await self._auth()
         session = self.client_session()
+        url = urljoin(self._host, url)
 
         # validate auth response
         if 'error' in self._authResponse:
@@ -165,7 +168,7 @@ class AipFace:
 
         try:
             resp = await asyncio.wait_for(
-                session.get(self._accessTokenUrl,
+                session.get(urljoin(self._host, self._accessTokenUrl),
                             params={
                                 'grant_type': 'client_credentials',
                                 'client_id': self._apiKey,
