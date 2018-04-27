@@ -14,7 +14,7 @@ if sys.version_info < (3,5):
 
 setup(
     name = 'aiobaidu',
-    version = '0.1.2',
+    version = '0.1.3',
     packages=['aiobaidu'],
     install_requires=[
         'aiohttp>2.0',

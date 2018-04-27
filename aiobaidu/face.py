@@ -52,6 +52,7 @@ class AipFace:
         self._secretKey = secretKey
         self._timeout = 60.0
         self._host = host
+        self._max_poll_connections = 0 # unlimited
 
         if loop is None:
             loop = asyncio.get_event_loop()
@@ -65,7 +66,8 @@ class AipFace:
                 verify_ssl=False, loop=self._loop
             )
             self._client_session = aiohttp.ClientSession(
-                connector=connector, loop=self._loop
+                connector=connector, loop=self._loop,
+                limit=self._max_poll_connections
             )
 
         return self._client_session
