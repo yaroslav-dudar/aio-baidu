@@ -63,11 +63,11 @@ class AipFace:
     def client_session(self):
         if self._client_session is None or self._client_session.closed:
             connector = aiohttp.TCPConnector(
-                verify_ssl=False, loop=self._loop
+                verify_ssl=False, loop=self._loop,
+                limit=self._max_poll_connections
             )
             self._client_session = aiohttp.ClientSession(
-                connector=connector, loop=self._loop,
-                limit=self._max_poll_connections
+                connector=connector, loop=self._loop
             )
 
         return self._client_session
